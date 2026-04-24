@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
-  <title>挂一卦</title>
+  <title>每日一签</title>
   <!-- 禁止缓存，保证每次扫码随机 -->
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
@@ -79,7 +79,7 @@
       100% { transform: translate(20px, -20px) scale(1.05); }
     }
 
-    /* 流星/星星点缀 */
+    /* 星星点缀 */
     .star {
       position: fixed;
       width: 2px;
@@ -166,7 +166,6 @@
       text-shadow: 0 2px 5px rgba(0,0,0,0.2);
     }
 
-    /* 行动按钮区域 */
     .actions {
       display: flex;
       flex-direction: column;
@@ -189,6 +188,7 @@
       border: 1px solid rgba(255, 255, 255, 0.2);
       font-weight: 300;
       box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+      width: 100%;
     }
 
     button:active {
@@ -216,7 +216,7 @@
   <div class="bg-orb orb-1"></div>
   <div class="bg-orb orb-2"></div>
   <div class="bg-orb orb-3"></div>
-  <!-- 随机生成的小星星，用js动态添加几个固定位置，这里直接写几个 -->
+  <!-- 星星 -->
   <div class="star" style="top: 15%; left: 10%; animation-delay: 0s;"></div>
   <div class="star" style="top: 70%; left: 85%; animation-delay: 1.2s;"></div>
   <div class="star" style="top: 25%; left: 75%; animation-delay: 0.5s;"></div>
@@ -225,14 +225,13 @@
 
   <!-- 主卡片 -->
   <div class="card">
-    <div class="title">✨ 挂一卦</div>
+    <div class="title">✨ 每日一签</div>
     <div class="divider"></div>
     <div class="message-box">
       <p id="randomText">加载中...</p>
     </div>
     <div class="actions">
       <button onclick="showRandomText()" class="primary-btn">再抽一签</button>
-      <button onclick="copyText()">复制文案</button>
     </div>
     <div class="copy-hint">长按卡片保存为图片</div>
   </div>
@@ -355,32 +354,12 @@
     function showRandomText() {
       const randomIndex = Math.floor(Math.random() * texts.length);
       const textEl = document.getElementById('randomText');
-      // 加上一个轻微的淡入效果
+      // 淡入效果
       textEl.style.opacity = '0';
       setTimeout(() => {
         textEl.textContent = texts[randomIndex];
         textEl.style.opacity = '1';
       }, 150);
-    }
-
-    function copyText() {
-      const text = document.getElementById('randomText').textContent;
-      if (navigator.clipboard) {
-        navigator.clipboard.writeText(text).then(() => {
-          alert('已复制到剪贴板');
-        }).catch(() => {
-          alert('复制失败，请手动长按选择');
-        });
-      } else {
-        // 降级方案
-        const textarea = document.createElement('textarea');
-        textarea.value = text;
-        document.body.appendChild(textarea);
-        textarea.select();
-        document.execCommand('copy');
-        document.body.removeChild(textarea);
-        alert('已复制');
-      }
     }
 
     // 页面加载时显示第一条随机，同时加入随机参数防微信缓存
