@@ -1,30 +1,246 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
-    <title>随机文档</title>
-    <!-- 下面三行是关键：禁止浏览器缓存 -->
-    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-    <meta http-equiv="Pragma" content="no-cache">
-    <meta http-equiv="Expires" content="0">
-    <style>
-        body { font-family: sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 20px; background: #f4f4f4; box-sizing: border-box; }
-        .container { background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); max-width: 500px; width: 100%; }
-        #randomText { font-size: 1.2em; color: #333; margin-bottom: 20px; line-height: 1.6; word-break: break-word; }
-        button { background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-size: 1em; }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
+  <title>挂一卦</title>
+  <!-- 禁止缓存，保证每次扫码随机 -->
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Noto Sans SC', sans-serif;
+      min-height: 100vh;
+      background: linear-gradient(145deg, #1a1a2e 0%, #16213e 40%, #0f3460 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* 背景圆形装饰 */
+    .bg-orb {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(80px);
+      opacity: 0.25;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .orb-1 {
+      width: 260px;
+      height: 260px;
+      background: rgba(230, 180, 255, 0.35);
+      top: -60px;
+      left: -60px;
+      animation: float1 18s infinite alternate ease-in-out;
+    }
+
+    .orb-2 {
+      width: 200px;
+      height: 200px;
+      background: rgba(140, 200, 255, 0.3);
+      bottom: -40px;
+      right: -40px;
+      animation: float2 20s infinite alternate ease-in-out;
+    }
+
+    .orb-3 {
+      width: 180px;
+      height: 180px;
+      background: rgba(255, 220, 180, 0.3);
+      top: 50%;
+      left: 30%;
+      animation: float3 22s infinite alternate ease-in-out;
+    }
+
+    @keyframes float1 {
+      0% { transform: translate(0, 0) scale(1); }
+      100% { transform: translate(30px, 25px) scale(1.1); }
+    }
+
+    @keyframes float2 {
+      0% { transform: translate(0, 0) scale(1); }
+      100% { transform: translate(-30px, -20px) scale(1.08); }
+    }
+
+    @keyframes float3 {
+      0% { transform: translate(0, 0) scale(1); }
+      100% { transform: translate(20px, -20px) scale(1.05); }
+    }
+
+    /* 流星/星星点缀 */
+    .star {
+      position: fixed;
+      width: 2px;
+      height: 2px;
+      background: white;
+      border-radius: 50%;
+      opacity: 0.6;
+      z-index: 0;
+      animation: twinkle 3s infinite alternate;
+    }
+
+    @keyframes twinkle {
+      0% { opacity: 0.2; transform: scale(0.8); }
+      100% { opacity: 0.9; transform: scale(1.3); }
+    }
+
+    /* 主卡片 */
+    .card {
+      position: relative;
+      z-index: 2;
+      width: 100%;
+      max-width: 360px;
+      background: rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(25px);
+      -webkit-backdrop-filter: blur(25px);
+      border-radius: 40px;
+      padding: 40px 28px 35px;
+      box-shadow: 0 20px 45px rgba(0, 0, 0, 0.35), inset 0 1px 1px rgba(255, 255, 255, 0.15);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      text-align: center;
+      color: #fff;
+      transition: transform 0.3s ease;
+    }
+
+    .card:active {
+      transform: scale(0.98);
+    }
+
+    .title {
+      font-size: 1.8rem;
+      font-weight: 300;
+      letter-spacing: 4px;
+      color: rgba(255, 255, 255, 0.85);
+      margin-bottom: 30px;
+      text-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    }
+
+    .divider {
+      width: 50px;
+      height: 1px;
+      background: rgba(255, 255, 255, 0.4);
+      margin: 0 auto 25px;
+      position: relative;
+    }
+
+    .divider::before {
+      content: '✦';
+      position: absolute;
+      top: -14px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 16px;
+      color: rgba(255, 255, 255, 0.7);
+      background: #1a1a2e;
+      padding: 0 8px;
+    }
+
+    .message-box {
+      min-height: 120px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      margin-bottom: 30px;
+    }
+
+    #randomText {
+      font-size: 1.5rem;
+      line-height: 1.8;
+      font-weight: 300;
+      color: rgba(255, 255, 255, 0.95);
+      word-break: break-word;
+      position: relative;
+      padding: 0 10px;
+      text-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+
+    /* 行动按钮区域 */
+    .actions {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      margin-top: 10px;
+    }
+
+    button {
+      border: none;
+      background: rgba(255, 255, 255, 0.12);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border-radius: 50px;
+      padding: 14px 24px;
+      font-size: 1.05rem;
+      color: #fff;
+      letter-spacing: 2px;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      font-weight: 300;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    }
+
+    button:active {
+      transform: translateY(2px);
+      background: rgba(255, 255, 255, 0.2);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    }
+
+    .primary-btn {
+      background: rgba(255, 255, 255, 0.18);
+      font-weight: 400;
+      border: 1px solid rgba(255, 255, 255, 0.35);
+    }
+
+    .copy-hint {
+      font-size: 0.7rem;
+      color: rgba(255, 255, 255, 0.5);
+      margin-top: 18px;
+      letter-spacing: 1px;
+    }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <p id="randomText">加载中...</p>
-        <button onclick="showRandomText()">换一条</button>
-    </div>
+  <!-- 背景装饰 -->
+  <div class="bg-orb orb-1"></div>
+  <div class="bg-orb orb-2"></div>
+  <div class="bg-orb orb-3"></div>
+  <!-- 随机生成的小星星，用js动态添加几个固定位置，这里直接写几个 -->
+  <div class="star" style="top: 15%; left: 10%; animation-delay: 0s;"></div>
+  <div class="star" style="top: 70%; left: 85%; animation-delay: 1.2s;"></div>
+  <div class="star" style="top: 25%; left: 75%; animation-delay: 0.5s;"></div>
+  <div class="star" style="top: 55%; left: 20%; animation-delay: 0.9s;"></div>
+  <div class="star" style="top: 85%; left: 50%; animation-delay: 1.8s;"></div>
 
-    <script>
-        // 👇 把你准备好的100条文档内容替换进这个数组
-        const texts = [
-            "会慢慢变好的\n不用太急",
+  <!-- 主卡片 -->
+  <div class="card">
+    <div class="title">✨ 挂一卦</div>
+    <div class="divider"></div>
+    <div class="message-box">
+      <p id="randomText">加载中...</p>
+    </div>
+    <div class="actions">
+      <button onclick="showRandomText()" class="primary-btn">再抽一签</button>
+      <button onclick="copyText()">复制文案</button>
+    </div>
+    <div class="copy-hint">长按卡片保存为图片</div>
+  </div>
+
+  <script>
+    // ===== 在这里填入你的100条内容 =====
+    const texts = [
+"会慢慢变好的\n不用太急",
 "今天可以不那么用力",
 "刚好来得及\n你没有晚",
 "这件事会过去\n但你会留下",
@@ -133,16 +349,48 @@
 "你没有想象中那么糟",
 "会有答案\n只是还没出现",
 "刚好是现在"
-            // ... 共100条
-        ];
+      // ... 复制粘贴你的100条文本
+    ];
 
-        function showRandomText() {
-            const randomIndex = Math.floor(Math.random() * texts.length);
-            document.getElementById('randomText').textContent = texts[randomIndex];
-        }
+    function showRandomText() {
+      const randomIndex = Math.floor(Math.random() * texts.length);
+      const textEl = document.getElementById('randomText');
+      // 加上一个轻微的淡入效果
+      textEl.style.opacity = '0';
+      setTimeout(() => {
+        textEl.textContent = texts[randomIndex];
+        textEl.style.opacity = '1';
+      }, 150);
+    }
 
-        // 页面加载时，立即显示一条随机文档
-        window.onload = showRandomText;
-    </script>
+    function copyText() {
+      const text = document.getElementById('randomText').textContent;
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(text).then(() => {
+          alert('已复制到剪贴板');
+        }).catch(() => {
+          alert('复制失败，请手动长按选择');
+        });
+      } else {
+        // 降级方案
+        const textarea = document.createElement('textarea');
+        textarea.value = text;
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+        alert('已复制');
+      }
+    }
+
+    // 页面加载时显示第一条随机，同时加入随机参数防微信缓存
+    window.onload = function() {
+      if (!window.location.search.includes('t=')) {
+        window.location.href = window.location.pathname + '?t=' + Date.now();
+      } else {
+        showRandomText();
+      }
+    };
+  </script>
 </body>
 </html>
